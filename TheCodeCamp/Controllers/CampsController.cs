@@ -1,13 +1,14 @@
-﻿using System;
+﻿using AutoMapper;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Web.Http;
-using AutoMapper;
 using TheCodeCamp.Data;
 using TheCodeCamp.Models;
 
 namespace TheCodeCamp.Controllers
 {
+    [RoutePrefix("api/camps")]
     public class CampsController : ApiController
     {
         private readonly ICampRepository _repository;
@@ -19,11 +20,12 @@ namespace TheCodeCamp.Controllers
             _mapper = mapper;
         }
 
-        public async Task<IHttpActionResult> Get()
+        [Route()]
+        public async Task<IHttpActionResult> Get(bool includeTalks = false)
         {
             try
             {
-                var result = await _repository.GetAllCampsAsync();
+                var result = await _repository.GetAllCampsAsync(includeTalks);
                 // Mapping
                 var mappedResult = _mapper.Map<IEnumerable<CampModel>>(result);
                 return Ok(mappedResult);
@@ -33,7 +35,40 @@ namespace TheCodeCamp.Controllers
                 // TODO Add Logging
                 return InternalServerError(ex);
             }//            return Ok(new {Name = "Marcelo", Occupation = "Developer"});
-//            return BadRequest("It wasn't really bad, we're just learning...");
+             //            return BadRequest("It wasn't really bad, we're just learning...");
+        }
+
+        [Route("{moniker}")]
+        public async Task<IHttpActionResult> Get(string moniker, bool includeTalks = false)
+        {
+            try
+            {
+                var result = await _repository.GetCampAsync(moniker, includeTalks);
+                if (result == null)
+                {
+                    return NotFound();
+                }
+                return Ok(_mapper.Map<CampModel>(result));
+            }
+            catch (Exception e)
+            {
+                return InternalServerError(e);
+            }
+        }
+
+        [Route("searchByDate/{eventDate:datetime}")]
+        [HttpGet]
+        public async Task<IHttpActionResult> SearchByEventDate(DateTime eventDate, bool includeTalks = false)
+        {
+            try
+            {
+                var result = await _repository.GetAllCampsByEventDate(eventDate, includeTalks);
+                return Ok(_mapper.Map<CampModel[]>(result));
+            }
+            catch (Exception e)
+            {
+                return InternalServerError(e);
+            }
         }
     }
 }

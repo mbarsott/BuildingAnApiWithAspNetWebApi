@@ -1,24 +1,23 @@
 ﻿using AutoMapper;
+using Microsoft.Web.Http;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Web.Http;
-using Microsoft.Web.Http;
 using TheCodeCamp.Data;
 using TheCodeCamp.Models;
 
 namespace TheCodeCamp.Controllers
 {
-    [ApiVersion("1.0")]
-    [ApiVersion("1.1")]
+    [ApiVersion("2.0")]
 //    [RoutePrefix("api/camps")]
     [RoutePrefix("api/v{version:apiVersion}/camps")]
-    public class CampsController : ApiController
+    public class Camps2Controller : ApiController
     {
         private readonly ICampRepository _repository;
         private readonly IMapper _mapper;
 
-        public CampsController(ICampRepository repository, IMapper mapper)
+        public Camps2Controller(ICampRepository repository, IMapper mapper)
         {
             _repository = repository;
             _mapper = mapper;
@@ -42,8 +41,7 @@ namespace TheCodeCamp.Controllers
              //            return BadRequest("It wasn't really bad, we're just learning...");
         }
 
-        [MapToApiVersion("1.0")]
-        [Route("{moniker}", Name = "GetCamp")]
+        [Route("{moniker}", Name = "GetCamp20")]
         public async Task<IHttpActionResult> Get(string moniker, bool includeTalks = false)
         {
             try
@@ -53,26 +51,7 @@ namespace TheCodeCamp.Controllers
                 {
                     return NotFound();
                 }
-                return Ok(_mapper.Map<CampModel>(result));
-            }
-            catch (Exception e)
-            {
-                return InternalServerError(e);
-            }
-        }
-
-        [MapToApiVersion("1.1")]
-        [Route("{moniker}", Name = "GetCamp11")]
-        public async Task<IHttpActionResult> Get(string moniker)
-        {
-            try
-            {
-                var result = await _repository.GetCampAsync(moniker, true);
-                if (result == null)
-                {
-                    return NotFound();
-                }
-                return Ok(_mapper.Map<CampModel>(result));
+                return Ok(new { success = true, camp = _mapper.Map<CampModel>(result) });
             }
             catch (Exception e)
             {
